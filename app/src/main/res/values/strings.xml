@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">扫你码</string>
+    <string name="notification_title">扫你码</string>
+    <string name="notification_sub_title">快来扫吧~</string>
+</resources>
