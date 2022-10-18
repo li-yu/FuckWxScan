@@ -19,26 +19,30 @@ class MainActivity : ComponentActivity() {
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "没有找到可处理的应用", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "没有找到可处理的应用哎！", Toast.LENGTH_LONG).show()
             }
             finish()
             return
         }
-
-        val mediaProjectionManager: MediaProjectionManager by lazy {
-            getSystemService(
-                MEDIA_PROJECTION_SERVICE
-            ) as MediaProjectionManager
-        }
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            if (it.resultCode == Activity.RESULT_OK) {
-                App.screenCaptureIntentResult = it.data
-                startService(Intent(this, CaptureService::class.java))
-            } else {
-                App.screenCaptureIntentResult = null
-                Toast.makeText(this, "没有权限，将无法识别二维码哦~", Toast.LENGTH_SHORT).show()
+        if (App.screenCaptureIntentResult == null) {
+            val mediaProjectionManager: MediaProjectionManager by lazy {
+                getSystemService(
+                    MEDIA_PROJECTION_SERVICE
+                ) as MediaProjectionManager
             }
-            this.finish()
-        }.launch(mediaProjectionManager.createScreenCaptureIntent())
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                if (it.resultCode == Activity.RESULT_OK) {
+                    App.screenCaptureIntentResult = it.data
+                    startService(Intent(this, CaptureService::class.java))
+                } else {
+                    App.screenCaptureIntentResult = null
+                    Toast.makeText(this, "没有权限，将无法识别二维码哦~", Toast.LENGTH_SHORT).show()
+                }
+                this.finish()
+            }.launch(mediaProjectionManager.createScreenCaptureIntent())
+        } else {
+            startService(Intent(this, CaptureService::class.java))
+            finish()
+        }
     }
 }

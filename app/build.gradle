@@ -3,18 +3,21 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+static def releaseTime() {
+    return new Date().format("yyyyMMdd")
+}
+
 android {
     namespace 'cn.liyuyu.fuckwxscan'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "cn.liyuyu.fuckwxscan"
-        minSdk 21
-        targetSdk 32
+        minSdk 24
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
         }
@@ -22,8 +25,9 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            shrinkResources true
         }
     }
     compileOptions {
@@ -44,6 +48,11 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "FuckWxScan_v${variant.versionName}_${releaseTime()}.apk"
+        }
+    }
 }
 
 dependencies {
@@ -55,12 +64,6 @@ dependencies {
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
     implementation 'androidx.compose.material:material:1.2.1'
     implementation 'com.google.zxing:core:3.5.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
-    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
 }

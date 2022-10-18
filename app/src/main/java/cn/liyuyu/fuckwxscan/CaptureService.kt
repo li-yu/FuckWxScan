@@ -68,8 +68,10 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
             imageReader.surface, null, null
         )
         launch(Dispatchers.IO) {
-            delay(1000)
-            val image = imageReader.acquireLatestImage()
+            var image = imageReader.acquireLatestImage()
+            while (image == null) {
+                image = imageReader.acquireLatestImage()
+            }
             val bitmap = Utils.imageToBitmap(image)
             val result = Utils.decodeQRCode(bitmap)
             if (result != null && result.isNotEmpty()) {
@@ -179,6 +181,6 @@ class ForegroundNotification(private val service: CaptureService) :
 
     fun stopForegroundNotification() {
         mNotificationManager?.cancelAll()
-        service.stopForeground(true)
+        service.stopForeground(Service.STOP_FOREGROUND_REMOVE)
     }
 }
