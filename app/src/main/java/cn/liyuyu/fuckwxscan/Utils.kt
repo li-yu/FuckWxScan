@@ -6,9 +6,11 @@ import android.graphics.Bitmap
 import android.graphics.Point
 import android.media.Image
 import android.view.WindowManager
+import com.google.zxing.BarcodeFormat
 import com.google.zxing.Result
-import com.google.zxing.multi.qrcode.QRCodeMultiReader
+import com.google.zxing.qrcode.QRCodeReader
 import java.nio.ByteBuffer
+
 
 /**
  * Created by frank on 2022/10/17.
@@ -48,7 +50,7 @@ object Utils {
         return bitmap
     }
 
-    fun decodeQRCode(bitmap: Bitmap): Array<out Result>? {
+    fun decodeQRCode(bitmap: Bitmap): Result? {
         val width = bitmap.width
         val height = bitmap.height
         val pixels = IntArray(width * height)
@@ -58,9 +60,11 @@ object Utils {
             com.google.zxing.BinaryBitmap(com.google.zxing.common.HybridBinarizer(source))
         val hint = java.util.HashMap<com.google.zxing.DecodeHintType, Any>()
         hint[com.google.zxing.DecodeHintType.TRY_HARDER] = true
+        hint[com.google.zxing.DecodeHintType.POSSIBLE_FORMATS] = listOf(
+            BarcodeFormat.QR_CODE
+        )
         return try {
-            val reader = QRCodeMultiReader()
-            reader.decodeMultiple(binaryBitmap, hint)
+            QRCodeReader().decode(binaryBitmap, hint)
         } catch (e: Exception) {
             null
         }

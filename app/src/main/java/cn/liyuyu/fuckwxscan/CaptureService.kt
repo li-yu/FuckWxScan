@@ -74,11 +74,11 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
             }
             val bitmap = Utils.imageToBitmap(image)
             val result = Utils.decodeQRCode(bitmap)
-            if (result != null && result.isNotEmpty()) {
+            if (result != null) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CaptureService, result[0].text, Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@CaptureService, result.text, Toast.LENGTH_LONG).show()
                     val intent = Intent(this@CaptureService, MainActivity::class.java)
-                    intent.putExtra("url", result[0].text)
+                    intent.putExtra("url", result.text)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
                 }
