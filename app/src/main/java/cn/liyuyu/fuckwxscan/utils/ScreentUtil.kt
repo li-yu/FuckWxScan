@@ -1,0 +1,30 @@
+package cn.liyuyu.fuckwxscan.utils
+
+import android.content.Context
+import android.content.res.Resources
+import android.graphics.Point
+import android.os.Build
+import android.os.Build.VERSION
+import android.view.WindowManager
+
+/**
+ * Created by frank on 2022/10/21.
+ */
+object ScreenUtil {
+
+    fun getScreenSize(context: Context): Pair<Int, Int> {
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val point = Point()
+        if (VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            wm.currentWindowMetrics.bounds.let {
+                point.x = it.width()
+                point.y = it.height()
+            }
+        } else {
+            wm.defaultDisplay.getRealSize(point)
+        }
+        return Pair(point.x, point.y)
+    }
+
+    fun getScreenDensityDpi() = Resources.getSystem().displayMetrics.densityDpi
+}

@@ -1,4 +1,4 @@
-package cn.liyuyu.fuckwxscan
+package cn.liyuyu.fuckwxscan.service
 
 import android.annotation.SuppressLint
 import android.app.*
@@ -15,6 +15,11 @@ import android.os.Build
 import android.os.IBinder
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import cn.liyuyu.fuckwxscan.App
+import cn.liyuyu.fuckwxscan.R
+import cn.liyuyu.fuckwxscan.ui.MainActivity
+import cn.liyuyu.fuckwxscan.utils.BitmapUtil
+import cn.liyuyu.fuckwxscan.utils.ScreenUtil
 import kotlinx.coroutines.*
 
 
@@ -30,9 +35,10 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
         ) as MediaProjectionManager
     }
     private val imageReader by lazy {
+        val (width, height) = ScreenUtil.getScreenSize(this)
         ImageReader.newInstance(
-            Utils.getScreenWidth(this),
-            Utils.getScreenHeight(this),
+            width,
+            height,
             PixelFormat.RGBA_8888,
             1
         )
@@ -61,9 +67,10 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
         if (mediaProjection == null) {
             return
         }
+        val (screenWidth, screenHeight) = ScreenUtil.getScreenSize(this)
         virtualDisplay = mediaProjection!!.createVirtualDisplay(
             "ScreenCapture",
-            Utils.getScreenWidth(this), Utils.getScreenHeight(this), Utils.getScreenDensityDpi(),
+            screenWidth, screenHeight, ScreenUtil.getScreenDensityDpi(),
             DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
             imageReader.surface, null, null
         )
@@ -75,8 +82,8 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
                 }
                 return@withTimeoutOrNull latestImage
             } ?: return@launch
-            val bitmap = Utils.imageToBitmap(image)
-            val result = withTimeoutOrNull(2000) { Utils.decodeQRCode(bitmap) }
+            val bitmap = BitmapUtil.imageToBitmap(image)
+            val result = withTimeoutOrNull(2000) { BitmapUtil.decodeQRCode(bitmap) }
             if (result != null) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@CaptureService, result.text, Toast.LENGTH_LONG).show()
@@ -138,7 +145,7 @@ class ForegroundNotification(private val service: CaptureService) :
                 notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
                 notificationIntent.flags =
                     Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-                var pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     PendingIntent.getActivity(
                         this,
                         2140,
@@ -147,8 +154,10 @@ class ForegroundNotification(private val service: CaptureService) :
                     )
                 } else {
                     PendingIntent.getActivity(
-                        this, 2140,
-                        notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT
+                        this,
+                        2140,
+                        notificationIntent,
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
                 }
 

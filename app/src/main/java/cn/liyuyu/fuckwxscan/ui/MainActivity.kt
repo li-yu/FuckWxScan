@@ -1,4 +1,4 @@
-package cn.liyuyu.fuckwxscan
+package cn.liyuyu.fuckwxscan.ui
 
 import android.app.Activity
 import android.content.Intent
@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import cn.liyuyu.fuckwxscan.App
+import cn.liyuyu.fuckwxscan.service.CaptureService
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +38,7 @@ class MainActivity : ComponentActivity() {
                     startService(Intent(this, CaptureService::class.java))
                 } else {
                     App.screenCaptureIntentResult = null
-                    Toast.makeText(this, "没有权限，将无法识别二维码哦~", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "取消识别~", Toast.LENGTH_SHORT).show()
                 }
                 this.finish()
             }.launch(mediaProjectionManager.createScreenCaptureIntent())
