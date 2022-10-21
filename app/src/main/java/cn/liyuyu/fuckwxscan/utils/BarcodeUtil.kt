@@ -5,7 +5,7 @@ import android.media.Image
 import cn.liyuyu.fuckwxscan.data.BarcodeResult
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
-import com.google.zxing.qrcode.QRCodeReader
+import com.google.zxing.multi.qrcode.QRCodeMultiReader
 import java.nio.ByteBuffer
 
 
@@ -41,7 +41,7 @@ object BarcodeUtil {
         return bitmap
     }
 
-    fun decodeQRCode(bitmap: Bitmap, isRecursive: Boolean = true): Result? {
+    fun decodeQRCode(bitmap: Bitmap, isRecursive: Boolean = true): Array<Result>? {
         val width = bitmap.width
         val height = bitmap.height
         val pixels = IntArray(width * height)
@@ -53,17 +53,17 @@ object BarcodeUtil {
         hint[DecodeHintType.CHARACTER_SET] = "UTF-8"
         hint[DecodeHintType.POSSIBLE_FORMATS] = BarcodeFormat.QR_CODE
 
-        val reader = QRCodeReader()
-        var result: Result? = null
+        val reader = QRCodeMultiReader()
+        var result: Array<Result>? = null
         try {
-            result = reader.decode(binaryBitmap, hint)
+            result = reader.decodeMultiple(binaryBitmap, hint)
         } catch (e: Exception) {
             //ignore
         }
         if (result == null) {
             try {
                 binaryBitmap = BinaryBitmap(HybridBinarizer(source.invert()))
-                result = reader.decode(binaryBitmap, hint)
+                result = reader.decodeMultiple(binaryBitmap, hint)
             } catch (e: Exception) {
                 //ignore
             }

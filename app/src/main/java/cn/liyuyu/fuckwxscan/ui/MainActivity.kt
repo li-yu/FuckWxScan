@@ -8,19 +8,31 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cn.liyuyu.fuckwxscan.App
 import cn.liyuyu.fuckwxscan.R
 import cn.liyuyu.fuckwxscan.data.BarcodeResult
@@ -32,18 +44,21 @@ import cn.liyuyu.fuckwxscan.utils.ScreenUtil
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val url = intent.getStringExtra("url")
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    finish()
+                }
+            })
         val results = intent.getParcelableArrayExtra("results")
-        if (!url.isNullOrEmpty()) {
-            showHint(results)
-            return
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
+        if (results != null && results.isNotEmpty()) {
+            if (results.size == 1) {
+                handleText((results[0] as BarcodeResult).text)
+                finish()
             } else {
-                Toast.makeText(this, "没有找到可处理的应用哎！", Toast.LENGTH_LONG).show()
+                showHints(results)
             }
-            finish()
             return
         }
         if (App.screenCaptureIntentResult == null) {
@@ -68,35 +83,65 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun showHint(results: Array<Parcelable>?) {
+    private fun handleText(text: String) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(text))
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "没有找到可处理的应用哎！", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showHints(results: Array<Parcelable>?) {
         setContent {
             FuckWxScanTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = HintMask
+                    modifier = Modifier.fillMaxSize(), color = HintMask
                 ) {
-                    results?.let {
-                        for (item in results) {
-                            val result = item as BarcodeResult
-                            Text(text = ".", modifier = Modifier
-                                .absoluteOffset(
-                                    with(LocalDensity.current) { result.centerX.toDp() },
-                                    with(LocalDensity.current) {
-                                        result.centerY.toDp()
-                                    }
-                                ))
-                            Box(modifier = Modifier
-                                .absoluteOffset(
-                                    with(LocalDensity.current) { result.centerX.toDp() - 16.dp },
-                                    with(LocalDensity.current) {
-                                        (result.centerY - ScreenUtil.getStatusHeight(this@MainActivity)).toDp() - 16.dp
-                                    }
-                                )
-                                .size(32.dp)) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.ic_wait_click),
-                                    contentDescription = null
-                                )
+                    Box {
+                        val transition = rememberInfiniteTransition()
+                        val currentSize by transition.animateValue(
+                            28.dp, 40.dp, Dp.VectorConverter, infiniteRepeatable(
+                                animation = tween(
+                                    durationMillis = 400, easing = LinearEasing
+                                ), repeatMode = RepeatMode.Reverse
+                            )
+                        )
+                        Text(text = "取消",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = (-16).dp, y = 16.dp)
+                                .clickable {
+                                    finish()
+                                })
+                        results?.let {
+                            for (item in results) {
+                                val result = item as BarcodeResult
+                                Box(
+                                    modifier = Modifier
+                                        .offset(with(LocalDensity.current) { result.centerX.toDp() - 18.dp },
+                                            with(LocalDensity.current) {
+                                                (result.centerY - ScreenUtil.getStatusHeight(this@MainActivity)).toDp() - 18.dp
+                                            })
+                                        .size(36.dp)
+                                        .clickable {
+                                            handleText(result.text)
+                                            finish()
+                                        }, contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_wait_click),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(Color.White)
+                                            .size(currentSize)
+                                    )
+                                }
                             }
                         }
                     }

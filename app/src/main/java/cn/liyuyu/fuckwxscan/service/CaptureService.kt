@@ -84,13 +84,11 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
                 return@withTimeoutOrNull latestImage
             } ?: return@launch
             val bitmap = BarcodeUtil.imageToBitmap(image)
-            val result = withTimeoutOrNull(2000) { BarcodeUtil.decodeQRCode(bitmap) }
-            if (result != null) {
+            val resultArray = withTimeoutOrNull(2000) { BarcodeUtil.decodeQRCode(bitmap) }
+            if (resultArray != null && resultArray.isNotEmpty()) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CaptureService, result.text, Toast.LENGTH_LONG).show()
                     val intent = Intent(this@CaptureService, MainActivity::class.java)
-                    intent.putExtra("url", result.text)
-                    intent.putExtra("results", arrayOf(result.toBarcodeResult()))
+                    intent.putExtra("results", resultArray.map { it.toBarcodeResult() }.toTypedArray())
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
                 }
