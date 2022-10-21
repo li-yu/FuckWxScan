@@ -18,7 +18,8 @@ import androidx.core.app.NotificationCompat
 import cn.liyuyu.fuckwxscan.App
 import cn.liyuyu.fuckwxscan.R
 import cn.liyuyu.fuckwxscan.ui.MainActivity
-import cn.liyuyu.fuckwxscan.utils.BitmapUtil
+import cn.liyuyu.fuckwxscan.utils.BarcodeUtil
+import cn.liyuyu.fuckwxscan.utils.BarcodeUtil.toBarcodeResult
 import cn.liyuyu.fuckwxscan.utils.ScreenUtil
 import kotlinx.coroutines.*
 
@@ -82,13 +83,14 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
                 }
                 return@withTimeoutOrNull latestImage
             } ?: return@launch
-            val bitmap = BitmapUtil.imageToBitmap(image)
-            val result = withTimeoutOrNull(2000) { BitmapUtil.decodeQRCode(bitmap) }
+            val bitmap = BarcodeUtil.imageToBitmap(image)
+            val result = withTimeoutOrNull(2000) { BarcodeUtil.decodeQRCode(bitmap) }
             if (result != null) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@CaptureService, result.text, Toast.LENGTH_LONG).show()
                     val intent = Intent(this@CaptureService, MainActivity::class.java)
                     intent.putExtra("url", result.text)
+                    intent.putExtra("results", arrayOf(result.toBarcodeResult()))
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
                 }

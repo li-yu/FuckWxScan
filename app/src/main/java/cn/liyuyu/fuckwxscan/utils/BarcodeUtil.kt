@@ -2,6 +2,7 @@ package cn.liyuyu.fuckwxscan.utils
 
 import android.graphics.*
 import android.media.Image
+import cn.liyuyu.fuckwxscan.data.BarcodeResult
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeReader
@@ -11,7 +12,19 @@ import java.nio.ByteBuffer
 /**
  * Created by frank on 2022/10/17.
  */
-object BitmapUtil {
+object BarcodeUtil {
+
+    fun Result.toBarcodeResult(): BarcodeResult {
+        val minX = resultPoints.minByOrNull { it.x }?.x ?: 0f
+        val maxX = resultPoints.maxByOrNull { it.x }?.x ?: 0f
+        val minY = resultPoints.minByOrNull { it.y }?.y ?: 0f
+        val maxY = resultPoints.maxByOrNull { it.y }?.y ?: 0f
+        return BarcodeResult(
+            text = text,
+            centerX = (minX + maxX) / 2,
+            centerY = (minY + maxY) / 2
+        )
+    }
 
     fun imageToBitmap(image: Image): Bitmap {
         val width = image.width
@@ -38,9 +51,8 @@ object BitmapUtil {
         val hint = HashMap<DecodeHintType, Any>()
         hint[DecodeHintType.TRY_HARDER] = true
         hint[DecodeHintType.CHARACTER_SET] = "UTF-8"
-        hint[DecodeHintType.POSSIBLE_FORMATS] = listOf(
-            BarcodeFormat.QR_CODE
-        )
+        hint[DecodeHintType.POSSIBLE_FORMATS] = BarcodeFormat.QR_CODE
+
         val reader = QRCodeReader()
         var result: Result? = null
         try {

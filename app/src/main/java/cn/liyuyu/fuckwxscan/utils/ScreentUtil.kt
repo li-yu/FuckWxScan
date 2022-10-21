@@ -26,5 +26,14 @@ object ScreenUtil {
         return Pair(point.x, point.y)
     }
 
+    fun getStatusHeight(context: Context): Int {
+        var result = 0
+        val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+        if (resourceId > 0) {
+            result = context.resources.getDimensionPixelSize(resourceId)
+        }
+        return result
+    }
+
     fun getScreenDensityDpi() = Resources.getSystem().displayMetrics.densityDpi
 }
