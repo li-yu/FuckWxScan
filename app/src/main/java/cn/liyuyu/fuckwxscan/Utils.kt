@@ -6,8 +6,8 @@ import android.graphics.Bitmap
 import android.graphics.Point
 import android.media.Image
 import android.view.WindowManager
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.Result
+import com.google.zxing.*
+import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeReader
 import java.nio.ByteBuffer
 
@@ -55,18 +55,28 @@ object Utils {
         val height = bitmap.height
         val pixels = IntArray(width * height)
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-        val source = com.google.zxing.RGBLuminanceSource(width, height, pixels)
-        val binaryBitmap =
-            com.google.zxing.BinaryBitmap(com.google.zxing.common.HybridBinarizer(source))
-        val hint = java.util.HashMap<com.google.zxing.DecodeHintType, Any>()
-        hint[com.google.zxing.DecodeHintType.TRY_HARDER] = true
-        hint[com.google.zxing.DecodeHintType.POSSIBLE_FORMATS] = listOf(
+        val source = RGBLuminanceSource(width, height, pixels)
+        var binaryBitmap = BinaryBitmap(HybridBinarizer(source))
+        val hint = HashMap<DecodeHintType, Any>()
+        hint[DecodeHintType.TRY_HARDER] = true
+        hint[DecodeHintType.POSSIBLE_FORMATS] = listOf(
             BarcodeFormat.QR_CODE
         )
-        return try {
-            QRCodeReader().decode(binaryBitmap, hint)
+        val reader = QRCodeReader()
+        var result: Result? = null
+        try {
+            result = reader.decode(binaryBitmap, hint)
         } catch (e: Exception) {
-            null
+            //ignore
         }
+        if (result == null) {
+            try {
+                binaryBitmap = BinaryBitmap(HybridBinarizer(source.invert()))
+                result = reader.decode(binaryBitmap)
+            } catch (e: Exception) {
+                //ignore
+            }
+        }
+        return result
     }
 }

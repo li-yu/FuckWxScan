@@ -82,6 +82,10 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
                 }
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@CaptureService, "未识别到二维码", Toast.LENGTH_LONG).show()
+                }
             }
             // stop
             virtualDisplay?.release()
