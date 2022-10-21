@@ -68,12 +68,15 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
             imageReader.surface, null, null
         )
         launch(Dispatchers.IO) {
-            var image = imageReader.acquireLatestImage()
-            while (image == null) {
-                image = imageReader.acquireLatestImage()
-            }
+            val image = withTimeoutOrNull(1000) {
+                var latestImage = imageReader.acquireLatestImage()
+                while (latestImage == null) {
+                    latestImage = imageReader.acquireLatestImage()
+                }
+                return@withTimeoutOrNull latestImage
+            } ?: return@launch
             val bitmap = Utils.imageToBitmap(image)
-            val result = Utils.decodeQRCode(bitmap)
+            val result = withTimeoutOrNull(2000) { Utils.decodeQRCode(bitmap) }
             if (result != null) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@CaptureService, result.text, Toast.LENGTH_LONG).show()
