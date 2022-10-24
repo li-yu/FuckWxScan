@@ -82,7 +82,7 @@ object BarcodeUtil {
      * @param brightness -255..255 0 is default
      * @return new bitmap
      */
-    fun changeBitmapContrastBrightness(
+    private fun changeBitmapContrastBrightness(
         bmp: Bitmap,
         contrast: Float,
         brightness: Float

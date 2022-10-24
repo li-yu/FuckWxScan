@@ -42,16 +42,19 @@ import cn.liyuyu.fuckwxscan.ui.theme.HintMask
 import cn.liyuyu.fuckwxscan.utils.ScreenUtil
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_BARCODE_RESULTS = "extra_barcode_results"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        onBackPressedDispatcher.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    finish()
-                }
-            })
-        val results = intent.getParcelableArrayExtra("results")
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                finish()
+            }
+        })
+        @Suppress("DEPRECATION") val results = intent.getParcelableArrayExtra(EXTRA_BARCODE_RESULTS)
         if (results != null && results.isNotEmpty()) {
             if (results.size == 1) {
                 handleText((results[0] as BarcodeResult).text)
@@ -125,7 +128,7 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .offset(with(LocalDensity.current) { result.centerX.toDp() - 18.dp },
                                             with(LocalDensity.current) {
-                                                (result.centerY - ScreenUtil.getStatusHeight(this@MainActivity)).toDp() - 18.dp
+                                                (result.centerY - ScreenUtil.getStatusBarHeight(this@MainActivity)).toDp() - 18.dp
                                             })
                                         .size(36.dp)
                                         .clickable {

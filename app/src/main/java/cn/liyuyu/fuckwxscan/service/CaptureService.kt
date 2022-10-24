@@ -88,7 +88,10 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
             if (resultArray != null && resultArray.isNotEmpty()) {
                 withContext(Dispatchers.Main) {
                     val intent = Intent(this@CaptureService, MainActivity::class.java)
-                    intent.putExtra("results", resultArray.map { it.toBarcodeResult() }.toTypedArray())
+                    intent.putExtra(
+                        MainActivity.EXTRA_BARCODE_RESULTS,
+                        resultArray.map { it.toBarcodeResult() }.toTypedArray()
+                    )
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
                 }

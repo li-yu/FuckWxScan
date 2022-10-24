@@ -1,5 +1,6 @@
 package cn.liyuyu.fuckwxscan.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Point
@@ -21,12 +22,13 @@ object ScreenUtil {
                 point.y = it.height()
             }
         } else {
-            wm.defaultDisplay.getRealSize(point)
+            @Suppress("DEPRECATION") wm.defaultDisplay.getRealSize(point)
         }
         return Pair(point.x, point.y)
     }
 
-    fun getStatusHeight(context: Context): Int {
+    @SuppressLint("DiscouragedApi")
+    fun getStatusBarHeight(context: Context): Int {
         var result = 0
         val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
         if (resourceId > 0) {
