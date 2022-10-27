@@ -76,6 +76,7 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
             imageReader.surface, null, null
         )
         launch(Dispatchers.IO) {
+            delay(200)
             val image = withTimeoutOrNull(1000) {
                 var latestImage = imageReader.acquireLatestImage()
                 while (latestImage == null) {
