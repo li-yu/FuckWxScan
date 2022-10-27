@@ -108,11 +108,6 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
         }
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        foregroundService.startForegroundNotification()
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (null == intent) {
             return START_NOT_STICKY
