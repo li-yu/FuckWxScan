@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import cn.liyuyu.fuckwxscan.App
 import cn.liyuyu.fuckwxscan.R
 import cn.liyuyu.fuckwxscan.data.BarcodeResult
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 finish()
@@ -117,7 +119,16 @@ class MainActivity : ComponentActivity() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .offset(x = (-16).dp, y = 16.dp)
+                                .offset(
+                                    x = (-16).dp,
+                                    y = 16.dp + with(LocalDensity.current) {
+                                        ScreenUtil
+                                            .getStatusBarHeight(
+                                                this@MainActivity
+                                            )
+                                            .toDp()
+                                    }
+                                )
                                 .clickable {
                                     finish()
                                 })
@@ -128,7 +139,7 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .offset(with(LocalDensity.current) { result.centerX.toDp() - 18.dp },
                                             with(LocalDensity.current) {
-                                                (result.centerY - ScreenUtil.getStatusBarHeight(this@MainActivity)).toDp() - 18.dp
+                                                result.centerY.toDp() - 18.dp
                                             })
                                         .size(36.dp)
                                         .clickable {
