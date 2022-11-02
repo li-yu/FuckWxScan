@@ -1,11 +1,18 @@
 package cn.liyuyu.fuckwxscan.utils
 
+import android.content.Context
 import android.graphics.*
 import android.media.Image
+import android.net.Uri
+import androidx.core.content.FileProvider
 import cn.liyuyu.fuckwxscan.data.BarcodeResult
+import cn.liyuyu.fuckwxscan.data.ResultType
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.multi.qrcode.QRCodeMultiReader
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
 
 
@@ -20,10 +27,18 @@ object BarcodeUtil {
         val minY = resultPoints.minByOrNull { it.y }?.y ?: 0f
         val maxY = resultPoints.maxByOrNull { it.y }?.y ?: 0f
         return BarcodeResult(
-            text = text,
-            centerX = (minX + maxX) / 2,
-            centerY = (minY + maxY) / 2
+            text = text, centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2
         )
+    }
+
+    fun Bitmap.toByteArray(): ByteArray {
+        val stream = ByteArrayOutputStream()
+        this.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+        return stream.toByteArray()
+    }
+
+    fun ByteArray.toBitmap(): Bitmap {
+        return BitmapFactory.decodeByteArray(this, 0, this.size)
     }
 
     fun imageToBitmap(image: Image): Bitmap {
@@ -83,9 +98,7 @@ object BarcodeUtil {
      * @return new bitmap
      */
     private fun changeBitmapContrastBrightness(
-        bmp: Bitmap,
-        contrast: Float,
-        brightness: Float
+        bmp: Bitmap, contrast: Float, brightness: Float
     ): Bitmap {
         val cm = ColorMatrix(
             floatArrayOf(
@@ -115,5 +128,47 @@ object BarcodeUtil {
         val paint = Paint().apply { colorFilter = ColorMatrixColorFilter(cm) }
         Canvas(ret).drawBitmap(bmp, 0f, 0f, paint)
         return ret
+    }
+
+    fun getBitmapUri(bitmap: Bitmap, context: Context): Uri? {
+        val file = File(context.getExternalFilesDir(null), "screenShot.jpg")
+        if (file.exists()) {
+            file.delete()
+        }
+        try {
+            val fos = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
+            fos.flush()
+            fos.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            return if (file.exists()) {
+                FileProvider.getUriForFile(
+                    context, context.packageName + ".provider", file
+                )
+            } else {
+                null
+            }
+        }
+    }
+
+    fun getResultType(result: String): ResultType {
+        val pattern = Regex("^(http(s?)|):\\/\\/(.+)\$")
+        val isUrl = pattern.matches(result)
+        return if (isUrl) {
+            if (Regex("^(http(s?)|):\\/\\/+([\\w])+.(weixin.qq|wechat).com").matches(result)) {
+                ResultType.WeChatUrl
+            } else if (Regex("^(http(s?)|):\\/\\/+([\\w])+.(alipay|taobao|tb).(com|cn)").matches(
+                    result
+                )
+            ) {
+                ResultType.AlipayUrl
+            } else {
+                ResultType.CommonUrl
+            }
+        } else {
+            ResultType.PlainText
+        }
     }
 }

@@ -20,6 +20,7 @@ import cn.liyuyu.fuckwxscan.R
 import cn.liyuyu.fuckwxscan.ui.MainActivity
 import cn.liyuyu.fuckwxscan.utils.BarcodeUtil
 import cn.liyuyu.fuckwxscan.utils.BarcodeUtil.toBarcodeResult
+import cn.liyuyu.fuckwxscan.utils.BarcodeUtil.toByteArray
 import cn.liyuyu.fuckwxscan.utils.ScreenUtil
 import kotlinx.coroutines.*
 
@@ -93,6 +94,7 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
                         MainActivity.EXTRA_BARCODE_RESULTS,
                         resultArray.map { it.toBarcodeResult() }.toTypedArray()
                     )
+                    intent.putExtra(MainActivity.EXTRA_BARCODE_BITMAP, bitmap.toByteArray())
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
                 }

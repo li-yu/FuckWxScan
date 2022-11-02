@@ -2,6 +2,7 @@ package cn.liyuyu.fuckwxscan.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Bundle
@@ -37,16 +38,22 @@ import androidx.core.view.WindowCompat
 import cn.liyuyu.fuckwxscan.App
 import cn.liyuyu.fuckwxscan.R
 import cn.liyuyu.fuckwxscan.data.BarcodeResult
+import cn.liyuyu.fuckwxscan.data.ResultType
 import cn.liyuyu.fuckwxscan.service.CaptureService
 import cn.liyuyu.fuckwxscan.ui.theme.FuckWxScanTheme
 import cn.liyuyu.fuckwxscan.ui.theme.HintMask
+import cn.liyuyu.fuckwxscan.utils.BarcodeUtil
+import cn.liyuyu.fuckwxscan.utils.BarcodeUtil.toBitmap
 import cn.liyuyu.fuckwxscan.utils.ScreenUtil
 
 class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_BARCODE_RESULTS = "extra_barcode_results"
+        const val EXTRA_BARCODE_BITMAP = "extra_barcode_bitmap"
     }
+
+    private lateinit var bitmap: Bitmap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +65,8 @@ class MainActivity : ComponentActivity() {
         })
         @Suppress("DEPRECATION") val results = intent.getParcelableArrayExtra(EXTRA_BARCODE_RESULTS)
         if (results != null && results.isNotEmpty()) {
+            @Suppress("DEPRECATION") bitmap =
+                intent.getByteArrayExtra(EXTRA_BARCODE_BITMAP)?.toBitmap()!!
             if (results.size == 1) {
                 handleText((results[0] as BarcodeResult).text)
                 finish()
@@ -90,12 +99,31 @@ class MainActivity : ComponentActivity() {
 
     private fun handleText(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(text))
-        if (intent.resolveActivity(packageManager) != null) {
-            startActivity(intent)
+        val resultType = BarcodeUtil.getResultType(text)
+        if (resultType == ResultType.AlipayUrl) {
+            val uri = BarcodeUtil.getBitmapUri(bitmap, this)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/*"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                setClassName(
+                    "com.eg.android.AlipayGphone",
+                    "com.alipay.mobile.quinox.splash.ShareScanQRDispenseActivity"
+                )
+            }
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "没有找到[支付宝]哎！", Toast.LENGTH_LONG).show()
+            }
         } else {
-            Toast.makeText(this, "没有找到可处理的应用哎！", Toast.LENGTH_LONG).show()
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(text))
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "没有找到可处理的应用哎！", Toast.LENGTH_LONG).show()
+            }
         }
+
     }
 
     private fun showHints(results: Array<Parcelable>?) {
