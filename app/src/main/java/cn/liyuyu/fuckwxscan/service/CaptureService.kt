@@ -19,9 +19,8 @@ import cn.liyuyu.fuckwxscan.App
 import cn.liyuyu.fuckwxscan.R
 import cn.liyuyu.fuckwxscan.ui.MainActivity
 import cn.liyuyu.fuckwxscan.utils.BarcodeUtil
-import cn.liyuyu.fuckwxscan.utils.BarcodeUtil.toBarcodeResult
-import cn.liyuyu.fuckwxscan.utils.BarcodeUtil.toByteArray
 import cn.liyuyu.fuckwxscan.utils.ScreenUtil
+import cn.liyuyu.fuckwxscan.utils.toBarcodeResult
 import kotlinx.coroutines.*
 
 
@@ -88,13 +87,14 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
             val bitmap = BarcodeUtil.imageToBitmap(image)
             val resultArray = withTimeoutOrNull(2000) { BarcodeUtil.decodeQRCode(bitmap) }
             if (resultArray != null && resultArray.isNotEmpty()) {
+                val bitmapUri = BarcodeUtil.getBitmapUri(bitmap, this@CaptureService)
                 withContext(Dispatchers.Main) {
                     val intent = Intent(this@CaptureService, MainActivity::class.java)
-                    intent.putExtra(
+                    intent.putParcelableArrayListExtra(
                         MainActivity.EXTRA_BARCODE_RESULTS,
-                        resultArray.map { it.toBarcodeResult() }.toTypedArray()
+                        resultArray.map { it.toBarcodeResult() }.toCollection(ArrayList())
                     )
-                    intent.putExtra(MainActivity.EXTRA_BARCODE_BITMAP, bitmap.toByteArray())
+                    intent.putExtra(MainActivity.EXTRA_BARCODE_BITMAP, bitmapUri)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     startActivity(intent)
                 }

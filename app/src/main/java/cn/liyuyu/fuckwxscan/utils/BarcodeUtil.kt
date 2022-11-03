@@ -5,12 +5,10 @@ import android.graphics.*
 import android.media.Image
 import android.net.Uri
 import androidx.core.content.FileProvider
-import cn.liyuyu.fuckwxscan.data.BarcodeResult
 import cn.liyuyu.fuckwxscan.data.ResultType
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.multi.qrcode.QRCodeMultiReader
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
@@ -20,26 +18,6 @@ import java.nio.ByteBuffer
  * Created by frank on 2022/10/17.
  */
 object BarcodeUtil {
-
-    fun Result.toBarcodeResult(): BarcodeResult {
-        val minX = resultPoints.minByOrNull { it.x }?.x ?: 0f
-        val maxX = resultPoints.maxByOrNull { it.x }?.x ?: 0f
-        val minY = resultPoints.minByOrNull { it.y }?.y ?: 0f
-        val maxY = resultPoints.maxByOrNull { it.y }?.y ?: 0f
-        return BarcodeResult(
-            text = text, centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2
-        )
-    }
-
-    fun Bitmap.toByteArray(): ByteArray {
-        val stream = ByteArrayOutputStream()
-        this.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-        return stream.toByteArray()
-    }
-
-    fun ByteArray.toBitmap(): Bitmap {
-        return BitmapFactory.decodeByteArray(this, 0, this.size)
-    }
 
     fun imageToBitmap(image: Image): Bitmap {
         val width = image.width
@@ -153,16 +131,13 @@ object BarcodeUtil {
         }
     }
 
-    fun getResultType(result: String): ResultType {
-        val pattern = Regex("^(http(s?)|):\\/\\/(.+)\$")
-        val isUrl = pattern.matches(result)
+    fun getResultType(text: String): ResultType {
+        val regex = "^(http(s?)|):\\/\\/(.+)\$".toRegex()
+        val isUrl = regex.matches(text)
         return if (isUrl) {
-            if (Regex("^(http(s?)|):\\/\\/+([\\w])+.(weixin.qq|wechat).com").matches(result)) {
+            if (Regex("(?=(weixin.qq|wechat).com)").containsMatchIn(text)) {
                 ResultType.WeChatUrl
-            } else if (Regex("^(http(s?)|):\\/\\/+([\\w])+.(alipay|taobao|tb).(com|cn)").matches(
-                    result
-                )
-            ) {
+            } else if (Regex("(?=(alipay|taobao|tb).(com|cn))").containsMatchIn(text)) {
                 ResultType.AlipayUrl
             } else {
                 ResultType.CommonUrl

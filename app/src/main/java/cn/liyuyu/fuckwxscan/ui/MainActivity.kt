@@ -2,11 +2,9 @@ package cn.liyuyu.fuckwxscan.ui
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Bundle
-import android.os.Parcelable
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -43,8 +41,9 @@ import cn.liyuyu.fuckwxscan.service.CaptureService
 import cn.liyuyu.fuckwxscan.ui.theme.FuckWxScanTheme
 import cn.liyuyu.fuckwxscan.ui.theme.HintMask
 import cn.liyuyu.fuckwxscan.utils.BarcodeUtil
-import cn.liyuyu.fuckwxscan.utils.BarcodeUtil.toBitmap
 import cn.liyuyu.fuckwxscan.utils.ScreenUtil
+import cn.liyuyu.fuckwxscan.utils.parcelable
+import cn.liyuyu.fuckwxscan.utils.parcelableArrayList
 
 class MainActivity : ComponentActivity() {
 
@@ -52,8 +51,6 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_BARCODE_RESULTS = "extra_barcode_results"
         const val EXTRA_BARCODE_BITMAP = "extra_barcode_bitmap"
     }
-
-    private lateinit var bitmap: Bitmap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,12 +60,10 @@ class MainActivity : ComponentActivity() {
                 finish()
             }
         })
-        @Suppress("DEPRECATION") val results = intent.getParcelableArrayExtra(EXTRA_BARCODE_RESULTS)
+        val results = intent.parcelableArrayList<BarcodeResult>(EXTRA_BARCODE_RESULTS)
         if (results != null && results.isNotEmpty()) {
-            @Suppress("DEPRECATION") bitmap =
-                intent.getByteArrayExtra(EXTRA_BARCODE_BITMAP)?.toBitmap()!!
             if (results.size == 1) {
-                handleText((results[0] as BarcodeResult).text)
+                handleText(results[0].text)
                 finish()
             } else {
                 showHints(results)
@@ -100,11 +95,11 @@ class MainActivity : ComponentActivity() {
     private fun handleText(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
         val resultType = BarcodeUtil.getResultType(text)
+        val bitmapUri = intent.parcelable<Uri>(EXTRA_BARCODE_BITMAP)
         if (resultType == ResultType.AlipayUrl) {
-            val uri = BarcodeUtil.getBitmapUri(bitmap, this)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/*"
-                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_STREAM, bitmapUri)
                 setClassName(
                     "com.eg.android.AlipayGphone",
                     "com.alipay.mobile.quinox.splash.ShareScanQRDispenseActivity"
@@ -113,20 +108,33 @@ class MainActivity : ComponentActivity() {
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "没有找到[支付宝]哎！", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "没有找到[支付宝]哎！", Toast.LENGTH_SHORT).show()
             }
-        } else {
+        } else if (resultType == ResultType.WeChatUrl) {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/*"
+                putExtra(Intent.EXTRA_STREAM, bitmapUri)
+                setClassName(
+                    "com.tencent.mm",
+                    "com.tencent.mm.ui.tools.ShareImgUI"
+                )
+            }
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "没有找到[微信]哎！", Toast.LENGTH_SHORT).show()
+            }
+        } else if (resultType == ResultType.CommonUrl) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(text))
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "没有找到可处理的应用哎！", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "没有找到可处理的应用哎！", Toast.LENGTH_SHORT).show()
             }
         }
-
     }
 
-    private fun showHints(results: Array<Parcelable>?) {
+    private fun showHints(results: List<BarcodeResult>?) {
         setContent {
             FuckWxScanTheme {
                 Surface(
@@ -161,8 +169,7 @@ class MainActivity : ComponentActivity() {
                                     finish()
                                 })
                         results?.let {
-                            for (item in results) {
-                                val result = item as BarcodeResult
+                            for (result in results) {
                                 Box(
                                     modifier = Modifier
                                         .offset(with(LocalDensity.current) { result.centerX.toDp() - 18.dp },
