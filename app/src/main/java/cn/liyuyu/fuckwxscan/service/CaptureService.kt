@@ -13,10 +13,10 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.IBinder
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import cn.liyuyu.fuckwxscan.App
 import cn.liyuyu.fuckwxscan.R
+import cn.liyuyu.fuckwxscan.data.BarcodeResult
 import cn.liyuyu.fuckwxscan.ui.MainActivity
 import cn.liyuyu.fuckwxscan.utils.BarcodeUtil
 import cn.liyuyu.fuckwxscan.utils.ScreenUtil
@@ -86,22 +86,19 @@ class CaptureService : Service(), CoroutineScope by MainScope() {
             } ?: return@launch
             val bitmap = BarcodeUtil.imageToBitmap(image)
             val resultArray = withTimeoutOrNull(2000) { BarcodeUtil.decodeQRCode(bitmap) }
-            if (resultArray != null && resultArray.isNotEmpty()) {
-                val bitmapUri = BarcodeUtil.getBitmapUri(bitmap, this@CaptureService)
-                withContext(Dispatchers.Main) {
-                    val intent = Intent(this@CaptureService, MainActivity::class.java)
-                    intent.putParcelableArrayListExtra(
-                        MainActivity.EXTRA_BARCODE_RESULTS,
-                        resultArray.map { it.toBarcodeResult() }.toCollection(ArrayList())
-                    )
-                    intent.putExtra(MainActivity.EXTRA_BARCODE_BITMAP, bitmapUri)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    startActivity(intent)
-                }
-            } else {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CaptureService, "未识别到二维码", Toast.LENGTH_LONG).show()
-                }
+            val bitmapUri = BarcodeUtil.getBitmapUri(bitmap, this@CaptureService)
+            withContext(Dispatchers.Main) {
+                val intent = Intent(this@CaptureService, MainActivity::class.java)
+                intent.putParcelableArrayListExtra(
+                    MainActivity.EXTRA_BARCODE_RESULTS,
+                    resultArray?.map { it.toBarcodeResult() }?.toCollection(ArrayList())
+                        ?: arrayListOf(
+                            BarcodeResult("未识别到二维码", 0f, 0f)
+                        )
+                )
+                intent.putExtra(MainActivity.EXTRA_BARCODE_BITMAP, bitmapUri)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
             }
             // stop
             virtualDisplay?.release()
