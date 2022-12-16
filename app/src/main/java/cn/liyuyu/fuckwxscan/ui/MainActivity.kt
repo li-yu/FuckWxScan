@@ -5,7 +5,6 @@ import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -40,10 +39,7 @@ import cn.liyuyu.fuckwxscan.data.ResultType
 import cn.liyuyu.fuckwxscan.service.CaptureService
 import cn.liyuyu.fuckwxscan.ui.theme.FuckWxScanTheme
 import cn.liyuyu.fuckwxscan.ui.theme.HintMask
-import cn.liyuyu.fuckwxscan.utils.BarcodeUtil
-import cn.liyuyu.fuckwxscan.utils.ScreenUtil
-import cn.liyuyu.fuckwxscan.utils.parcelable
-import cn.liyuyu.fuckwxscan.utils.parcelableArrayList
+import cn.liyuyu.fuckwxscan.utils.*
 
 class MainActivity : ComponentActivity() {
 
@@ -82,7 +78,7 @@ class MainActivity : ComponentActivity() {
                     startService(Intent(this, CaptureService::class.java))
                 } else {
                     App.screenCaptureIntentResult = null
-                    Toast.makeText(this, "取消识别~", Toast.LENGTH_SHORT).show()
+                    showToast("取消识别~")
                 }
                 this.finish()
             }.launch(mediaProjectionManager.createScreenCaptureIntent())
@@ -93,7 +89,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleText(text: String) {
-        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+        showToast(text)
         val resultType = BarcodeUtil.getResultType(text)
         val bitmapUri = intent.parcelable<Uri>(EXTRA_BARCODE_BITMAP)
         if (resultType == ResultType.AlipayUrl) {
@@ -108,7 +104,7 @@ class MainActivity : ComponentActivity() {
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "没有找到[支付宝]哎！", Toast.LENGTH_SHORT).show()
+                showToast("没有找到[支付宝]哎！")
             }
         } else if (resultType == ResultType.WeChatUrl) {
             val intent = Intent(Intent.ACTION_SEND).apply {
@@ -122,14 +118,14 @@ class MainActivity : ComponentActivity() {
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "没有找到[微信]哎！", Toast.LENGTH_SHORT).show()
+                showToast("没有找到[微信]哎！")
             }
         } else if (resultType == ResultType.CommonUrl) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(text))
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "没有找到可处理的应用哎！", Toast.LENGTH_SHORT).show()
+                showToast("没有找到可处理的应用哎！")
             }
         }
     }

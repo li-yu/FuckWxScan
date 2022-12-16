@@ -1,11 +1,13 @@
 package cn.liyuyu.fuckwxscan.utils
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.Parcelable
+import android.widget.Toast
 import cn.liyuyu.fuckwxscan.data.BarcodeResult
 import com.google.zxing.Result
 import java.io.ByteArrayOutputStream
@@ -51,4 +53,8 @@ fun Bitmap.toByteArray(): ByteArray {
 
 fun ByteArray.toBitmap(): Bitmap {
     return BitmapFactory.decodeByteArray(this, 0, this.size)
+}
+
+fun Activity.showToast(text: String, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, text, duration).show()
 }
