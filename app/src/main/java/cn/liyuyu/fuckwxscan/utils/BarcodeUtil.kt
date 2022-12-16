@@ -120,14 +120,13 @@ object BarcodeUtil {
             fos.close()
         } catch (e: Exception) {
             e.printStackTrace()
-        } finally {
-            return if (file.exists()) {
-                FileProvider.getUriForFile(
-                    context, context.packageName + ".provider", file
-                )
-            } else {
-                null
-            }
+        }
+        return if (file.exists()) {
+            FileProvider.getUriForFile(
+                context, context.packageName + ".provider", file
+            )
+        } else {
+            null
         }
     }
 
