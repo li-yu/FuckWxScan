@@ -107,15 +107,10 @@ class MainActivity : ComponentActivity() {
                 showToast("没有找到[支付宝]哎！")
             }
         } else if (resultType == ResultType.WeChatUrl) {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/*"
-                putExtra(Intent.EXTRA_STREAM, bitmapUri)
-                setClassName(
-                    "com.tencent.mm",
-                    "com.tencent.mm.ui.tools.ShareImgUI"
-                )
+            val intent = packageManager.getLaunchIntentForPackage("com.tencent.mm")?.apply {
+                putExtra("LauncherUI.From.Scaner.Shortcut", true)
             }
-            if (intent.resolveActivity(packageManager) != null) {
+            if (intent?.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
                 showToast("没有找到[微信]哎！")
@@ -151,32 +146,28 @@ class MainActivity : ComponentActivity() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .offset(
-                                    x = (-16).dp,
-                                    y = 16.dp + with(LocalDensity.current) {
-                                        ScreenUtil
-                                            .getStatusBarHeight(
-                                                this@MainActivity
-                                            )
-                                            .toDp()
-                                    }
-                                )
+                                .offset(x = (-16).dp, y = 16.dp + with(LocalDensity.current) {
+                                    ScreenUtil
+                                        .getStatusBarHeight(
+                                            this@MainActivity
+                                        )
+                                        .toDp()
+                                })
                                 .clickable {
                                     finish()
                                 })
                         results?.let {
                             for (result in results) {
-                                Box(
-                                    modifier = Modifier
-                                        .offset(with(LocalDensity.current) { result.centerX.toDp() - 18.dp },
-                                            with(LocalDensity.current) {
-                                                result.centerY.toDp() - 18.dp
-                                            })
-                                        .size(36.dp)
-                                        .clickable {
-                                            handleText(result.text)
-                                            finish()
-                                        }, contentAlignment = Alignment.Center
+                                Box(modifier = Modifier
+                                    .offset(with(LocalDensity.current) { result.centerX.toDp() - 18.dp },
+                                        with(LocalDensity.current) {
+                                            result.centerY.toDp() - 18.dp
+                                        })
+                                    .size(36.dp)
+                                    .clickable {
+                                        handleText(result.text)
+                                        finish()
+                                    }, contentAlignment = Alignment.Center
                                 ) {
                                     Image(
                                         painter = painterResource(id = R.drawable.ic_wait_click),

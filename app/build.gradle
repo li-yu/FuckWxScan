@@ -16,8 +16,8 @@ android {
         applicationId "cn.liyuyu.fuckwxscan"
         minSdk 24
         targetSdk 33
-        versionCode 6
-        versionName "1.5.1"
+        versionCode 7
+        versionName "1.5.2"
 
         vectorDrawables {
             useSupportLibrary true
